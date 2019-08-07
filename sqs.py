@@ -5,14 +5,13 @@ import click
 
 import mysqlbackup
 
-sqs = boto3.resource('sqs')
-
 
 @click.command()
 @click.option('--queue-url', required=True)
 @click.option('--region')
 def work(queue_url, region):
-    queue = sqs.Queue(queue_url, region_name=region)
+    sqs = boto3.resource('sqs', region_name=region)
+    queue = sqs.Queue(queue_url)
     messages = queue.receive_messages(MaxNumberOfMessages=1,
                                       WaitTimeSeconds=10)
     for message in messages:
