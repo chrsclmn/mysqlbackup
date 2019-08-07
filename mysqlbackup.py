@@ -1,4 +1,5 @@
 import datetime
+import re
 import subprocess
 import tempfile
 
@@ -7,7 +8,7 @@ import pymysql
 
 
 def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
-           include=(), exclude=()):
+           include=(), exclude=(), include_re=(), exclude_re=()):
     date = datetime.datetime.utcnow().isoformat().split('T')[0]
     if s3_prefix:
         s3_prefix = '/' + s3_prefix.strip('/')
@@ -27,7 +28,11 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
                 continue
             if db in exclude:
                 continue
+            if any([re.match(r, db) for r in exclude_re]):
+                continue
             if include and db not in include:
+                continue
+            if include_re and not any([re.match(r, db) for r in include_re]):
                 continue
             mysqldump = subprocess.Popen([
                 'mysqldump',
@@ -55,7 +60,9 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
 @click.option('--user', required=True)
 @click.option('--password', required=True)
 @click.option('--include',  multiple=True)
+@click.option('--include-re',  multiple=True)
 @click.option('--exclude',  multiple=True)
+@click.option('--exclude-re',  multiple=True)
 @click.option('--s3-bucket', required=True)
 @click.option('--s3-prefix', default='')
 def backup_command(**kwargs):
