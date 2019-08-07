@@ -9,8 +9,10 @@ import pymysql
 def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
            include=(), exclude=()):
     date = datetime.datetime.utcnow().isoformat().split('T')[0]
-    if s3_prefix and not s3_prefix.startswith('/'):
-        s3_prefix = '/' + s3_prefix
+    if s3_prefix:
+        s3_prefix = '/' + s3_prefix.strip('/')
+        if s3_prefix == '/':
+            s3_prefix = ''
     s3uri = f's3://{s3_bucket}{s3_prefix}/{host}/{date}'
     with tempfile.NamedTemporaryFile(mode='w') as cnf:
         cnf.write(f'[client]\npassword="{password}"\n')
@@ -42,9 +44,9 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
             ], stdin=mysqldump.stdout, stdout=subprocess.PIPE)
             aws = subprocess.run([
                 'aws', 's3', 'cp', '-', f'{s3uri}/{db}.sql.lz4'
-            ], stdin=lz4.stdout)
+            ], stdin=lz4.stdout, stderr=subprocess.PIPE)
             if aws.returncode != 0:
-                break
+                raise Exception(aws.stderr)
 
 
 @click.command()
