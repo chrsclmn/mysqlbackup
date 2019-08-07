@@ -10,8 +10,9 @@ sqs = boto3.resource('sqs')
 
 @click.command()
 @click.option('--queue-url', required=True)
-def work(queue_url):
-    queue = sqs.Queue(queue_url)
+@click.option('--region')
+def work(queue_url, region):
+    queue = sqs.Queue(queue_url, region_name=region)
     messages = queue.receive_messages(MaxNumberOfMessages=1,
                                       WaitTimeSeconds=10)
     for message in messages:
