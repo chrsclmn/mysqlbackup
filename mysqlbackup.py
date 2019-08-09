@@ -9,12 +9,12 @@ import pymysql
 
 def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
            include=(), exclude=(), include_re=(), exclude_re=()):
-    date = datetime.datetime.utcnow().isoformat().split('T')[0]
     if s3_prefix:
         s3_prefix = '/' + s3_prefix.strip('/')
         if s3_prefix == '/':
             s3_prefix = ''
-    s3uri = f's3://{s3_bucket}{s3_prefix}/{host}/{date}'
+    now = datetime.datetime.utcnow()
+    s3uri = f's3://{s3_bucket}{s3_prefix}/{host}/{now.year}/{now.month:02}/{now.day:02}' # noqa
     with tempfile.NamedTemporaryFile(mode='w') as cnf:
         cnf.write(f'[client]\npassword="{password}"\n')
         cnf.flush()
