@@ -14,7 +14,7 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
         if s3_prefix == '/':
             s3_prefix = ''
     now = datetime.datetime.utcnow()
-    s3uri = f's3://{s3_bucket}{s3_prefix}/{host}/{now.year}/{now.month:02}/{now.day:02}' # noqa
+    s3uri = f's3://{s3_bucket}{s3_prefix}'
     with tempfile.NamedTemporaryFile(mode='w') as cnf:
         cnf.write(f'[client]\npassword="{password}"\n')
         cnf.flush()
@@ -48,7 +48,7 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
                 'lz4', '-c'
             ], stdin=mysqldump.stdout, stdout=subprocess.PIPE)
             aws = subprocess.run([
-                'aws', 's3', 'cp', '-', f'{s3uri}/{db}.sql.lz4'
+                'aws', 's3', 'cp', '-', f'{s3uri}/{db}/{now.isoformat()}.sql.lz4' # noqa
             ], stdin=lz4.stdout, stderr=subprocess.PIPE)
             if aws.returncode != 0:
                 raise Exception(aws.stderr)
