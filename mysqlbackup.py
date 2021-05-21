@@ -48,7 +48,8 @@ def backup(host, user, password, s3_bucket, s3_prefix='', port=3306,
                 'lz4', '-c'
             ], stdin=mysqldump.stdout, stdout=subprocess.PIPE)
             aws = subprocess.run([
-                'aws', 's3', 'cp', '-', f'{s3uri}/{db}/{now.isoformat()}.sql.lz4' # noqa
+                'aws', 's3', 'cp', '-', f'{s3uri}/{db}/{now.isoformat()}.sql.lz4', # noqa
+                '--storage-class', 'STANDARD_IA'
             ], stdin=lz4.stdout, stderr=subprocess.PIPE)
             if aws.returncode != 0:
                 raise Exception(aws.stderr)
